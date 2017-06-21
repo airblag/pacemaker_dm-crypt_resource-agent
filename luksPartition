@@ -1,5 +1,6 @@
 #!/bin/sh
 
+
 #######################################################################
 # Initialization:
 
@@ -43,6 +44,14 @@ The device name to use for the mapped plaintext volume.
 The path to the keyfile that unlocks the encrypted partition.
 </longdesc>
 <shortdesc lang="en">Path to keyfile.</shortdesc>
+<content type="string" default="" />
+</parameter>
+
+<parameter name="options" unique="0">
+<longdesc lang="en">
+Extra options for cryptsetup luksOpen (like --allow-discards)
+</longdesc>
+<shortdesc lang="en">cryptsetup luksOpen options</shortdesc>
 <content type="string" default="" />
 </parameter>
 
@@ -93,9 +102,9 @@ luks_start() {
 	return $OCF_SUCCESS
     fi
     if [ -n "$OCF_RESKEY_keyfile" ]; then
-        cryptsetup -d $OCF_RESKEY_keyfile luksOpen /dev/$OCF_RESKEY_device $OCF_RESKEY_mapped
+        cryptsetup -d $OCF_RESKEY_keyfile luksOpen /dev/$OCF_RESKEY_device $OCF_RESKEY_mapped $OCF_RESKEY_options 
     elif [ -n "$OCF_RESKEY_keyscript" ]; then
-        "$OCF_RESKEY_keyscript" | cryptsetup -d - luksOpen /dev/$OCF_RESKEY_device $OCF_RESKEY_mapped
+        "$OCF_RESKEY_keyscript" | cryptsetup -d - luksOpen /dev/$OCF_RESKEY_device $OCF_RESKEY_mapped $OCF_RESKEY_options 
     else
         return $OCF_ERR_ARGS
     fi
@@ -148,6 +157,10 @@ luks_validate() {
     if [ -n "$OCF_RESKEY_keyscript" ] && [ !-f $OCF_RESKEY_keyscript ]; then
         return $OCF_ERR_ARGS
     fi
+    # for OCF_RESKEY_options, the manpage says :
+    # <options>  can  be  [--key-file,  --keyfile-offset,  --keyfile-size,  --readonly,  --test-passphrase,
+    # --allow-discards, --header, --key-slot, --master-key-file].
+    # FIXME: Not testing validity of OCF_RESKEY_options for now.
     return $OCF_SUCCESS
 }
 
